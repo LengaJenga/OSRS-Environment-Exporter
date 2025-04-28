@@ -26,10 +26,11 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("com.displee:rs-cache-library:7.1.0")
+    implementation("com.displee:rs-cache-library:7.2.0")
     implementation("org.jsoup:jsoup:1.14.3")
     implementation("org.apache.commons:commons-compress:1.21")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("org.slf4j:slf4j-api:1.7.36")
     implementation("org.pushing-pixels:radiance-theming:5.0.0")
@@ -62,7 +63,10 @@ dependencies {
 
 tasks {
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "19"
+        kotlinOptions.jvmTarget = "20"
+    }
+    withType<JavaCompile> {
+        options.release.set(20)
     }
     withType<Jar> {
         manifest {

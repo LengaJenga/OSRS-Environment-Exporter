@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.File
 
-class XteaManager(path: String) {
+class XteaManager(private val path: String) {
     private val xteaKeys: Map<Int, IntArray>
 
     init {
@@ -26,7 +26,7 @@ class XteaManager(path: String) {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class XteaKey @JsonCreator constructor(
-        @JsonProperty("mapsquare") @JsonAlias("region") val mapsquare: Int,
+        @JsonProperty("mapsquare") @JsonAlias("mapSquare", "region") val mapsquare: Int,
         @JsonProperty("key") @JsonAlias("keys") val key: IntArray
     )
 }

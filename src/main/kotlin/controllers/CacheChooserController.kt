@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import controllers.main.MainController
 import models.StartupOptions
 import models.config.ConfigOptions
-import models.openrs2.OpenRs2Cache
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
@@ -27,11 +26,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URI
-import java.net.URL
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.Instant
@@ -311,7 +305,7 @@ class CacheChooserController(
 
         Thread {
             try {
-                val conn = URL("$RUNESTATS_URL/$cacheName").openConnection()
+                val conn = URI("$RUNESTATS_URL/$cacheName").toURL().openConnection()
                 conn.addRequestProperty("User-Agent", "osrs-environment-exporter")
                 BufferedInputStream(conn.getInputStream()).use { inputStream ->
                     val tarIn = TarArchiveInputStream(
@@ -323,7 +317,7 @@ class CacheChooserController(
                         if (tarEntry.isDirectory) {
                             dest.mkdirs()
                         } else {
-                            Files.copy(tarIn, dest.toPath())
+                            java.nio.file.Files.copy(tarIn, dest.toPath())
                         }
                         tarEntry = tarIn.nextTarEntry
                     }
@@ -365,7 +359,7 @@ class CacheChooserController(
         xteaManager = try {
             XteaManager(txtCacheLocation.text)
         } catch (e: Exception) {
-            if(e is JsonMappingException || e is JsonProcessingException) {
+            if (e is JsonMappingException || e is JsonProcessingException) {
                 lblErrorText.text = "Bad cache: Could not decode xteas file: ${e.message}"
                 return
             }
@@ -375,7 +369,7 @@ class CacheChooserController(
                 if (msg.contains("xteas.json")) {
                     println("cache decryption keys not found as part of installed cache. Searching archive.openrs2.org")
                     val success = tryLocateCacheKeys(txtCacheLocation.text)
-                    if(!success) {
+                    if (!success) {
                         defaultErrorText(e)
                     }
                     return
@@ -396,14 +390,14 @@ class CacheChooserController(
         }
     }
 
-     /**
-      * Fetches the list of all available caches from OpenRS2 archive and filters for a cache which matches the
-      *  date on the user's selected cache.
-      *
-      * @return A list of OpenRs2Cache objects containing information about available caches
-      * @throws IOException If a network error occurs
-      * @throws HttpException If the server returns a non-2xx status code
-      */
+    /**
+     * Fetches the list of all available caches from OpenRS2 archive and filters for a cache which matches the
+     * date on the user's selected cache.
+     *
+     * @return A list of OpenRs2Cache objects containing information about available caches
+     * @throws IOException If a network error occurs
+     * @throws HttpException If the server returns a non-2xx status code
+     */
     private fun tryLocateCacheKeys(cacheLocation: String): Boolean {
         val date = parseDateFromCachePath(cacheLocation) ?: return false
 
@@ -417,15 +411,15 @@ class CacheChooserController(
             val localDate = instant?.atZone(ZoneId.of("UTC"))?.toLocalDate()
             localDate?.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-            if(localDate == date) {
+            if (localDate == date) {
                 println("Found openrs2 cache matching date: $date with id: ${cache.id}, fetching keys...")
                 val keys = openRsApi.getCacheKeysById(cache.id.toString())
 
                 val directory = Paths.get(cacheLocation)
-                Files.createDirectories(directory)
+                java.nio.file.Files.createDirectories(directory)
 
                 val filePath = directory.resolve("xteas.json")
-                Files.newBufferedWriter(
+                java.nio.file.Files.newBufferedWriter(
                     filePath,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
