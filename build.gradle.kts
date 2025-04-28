@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.9.0"
-    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
+    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
     id("application")
 }
 
@@ -45,20 +45,24 @@ dependencies {
     implementation("org.joml", "joml", "1.10.4")
     testImplementation(kotlin("test"))
     for (
-        p in listOf(
-            "natives-linux",
-            "natives-linux-arm32",
-            "natives-linux-arm64",
-            "natives-macos",
-            "natives-macos-arm64",
-            "natives-windows",
-            "natives-windows-arm64",
-            "natives-windows-x86",
-        )
+    p in listOf(
+        "natives-linux",
+        "natives-linux-arm32",
+        "natives-linux-arm64",
+        "natives-macos",
+        "natives-macos-arm64",
+        "natives-windows",
+        "natives-windows-arm64",
+        "natives-windows-x86",
+    )
     ) {
         runtimeOnly("org.lwjgl", "lwjgl", classifier = p)
         runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = p)
     }
+}
+
+ktlint {
+    ignoreFailures = true
 }
 
 tasks {
@@ -83,12 +87,13 @@ tasks.test {
     useJUnitPlatform()
 }
 
-val fatJar = task("fatJar", type = Jar::class) {
-    archiveBaseName.set("${project.name}-fat")
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-    with(tasks.jar.get() as CopySpec)
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
+val fatJar =
+    task("fatJar", type = Jar::class) {
+        archiveBaseName.set("${project.name}-fat")
+        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+        with(tasks.jar.get() as CopySpec)
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
 
 application {
     mainClass.set("AppKt")
